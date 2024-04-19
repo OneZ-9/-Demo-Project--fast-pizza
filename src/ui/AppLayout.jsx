@@ -4,6 +4,7 @@ import Header from "./Header";
 import Loader from "./Loader";
 
 function AppLayout() {
+  // Since we add this to parent component, now it is universal for entire app, and will show the loading indicator for entire app
   const navigation = useNavigation();
   //   console.log(navigation);
   const isLoading = navigation.state === "loading";
