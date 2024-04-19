@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Form, redirect } from "react-router-dom";
+import { createOrder } from "../../services/apiRestaurant";
 
 // https://uibakery.io/regex-library/phone-number
 const isValidPhone = (str) =>
@@ -37,8 +39,13 @@ function CreateOrder() {
   return (
     <div>
       <h2>Ready to order? Let's go!</h2>
+      {/* Form imported from React-router-dom (for react-router-actions) */}
+      {/* POST, PATCH or DELETE methods will work */}
+      {/* with action we can write the path where this form submited to, but it not
+      necessary as react-router will match closest route by default */}
 
-      <form>
+      {/* <Form method="POST" action="/order/new">   */}
+      <Form method="POST">
         <div>
           <label>First Name</label>
           <input type="text" name="customer" required />
@@ -70,11 +77,37 @@ function CreateOrder() {
         </div>
 
         <div>
+          <input type="hidden" name="cart" value={JSON.stringify(cart)} />
           <button>Order now</button>
         </div>
-      </form>
+      </Form>
     </div>
   );
+}
+
+// similar to loader function
+// whenever the Form submitted, behind the scenes this action function will be called by react-router and pass the request that was submitted.
+// request.formData() will provide by browser, it is regular web api
+export async function action({ request }) {
+  const formData = await request.formData();
+
+  // convert formData into object
+  const data = Object.fromEntries(formData);
+  // console.log(data);
+
+  // reshape the some of data values that we wanted to be
+  const order = {
+    ...data,
+    cart: JSON.parse(data.cart),
+    priority: data.priority === "on",
+  };
+  // console.log(order);
+
+  const newOrder = await createOrder(order);
+
+  // here we cannot use useNavigate hooks as hooks only accessible inside components,
+  // instead we can use redirect function provided by react-router which basically create new response/ new request
+  return redirect(`/order/${newOrder.id}`);
 }
 
 export default CreateOrder;
