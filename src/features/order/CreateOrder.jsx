@@ -2,6 +2,8 @@
 import { Form, redirect, useActionData, useNavigation } from 'react-router-dom';
 import { createOrder } from '../../services/apiRestaurant';
 import Button from '../../ui/Button';
+import { useSelector } from 'react-redux';
+import { useState } from 'react';
 
 // https://uibakery.io/regex-library/phone-number
 const isValidPhone = (str) =>
@@ -36,6 +38,7 @@ const fakeCart = [
 function CreateOrder() {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
+  const username = useSelector((store) => store.user.username);
 
   const formErrors = useActionData();
 
@@ -54,7 +57,13 @@ function CreateOrder() {
       <Form method="POST">
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center">
           <label className="sm:basis-[7rem]">First Name</label>
-          <input type="text" name="customer" required className="input grow" />
+          <input
+            type="text"
+            name="customer"
+            required
+            className="input grow"
+            defaultValue={username}
+          />
         </div>
 
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -97,7 +106,9 @@ function CreateOrder() {
         </div>
 
         <div>
+          {/* to pass this data with form details, it should be a string. */}
           <input type="hidden" name="cart" value={JSON.stringify(cart)} />
+
           <Button disabled={isSubmitting} type="primary">
             {isSubmitting ? 'Placing order...' : 'Order now'}
           </Button>
