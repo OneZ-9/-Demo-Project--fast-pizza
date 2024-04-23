@@ -1,14 +1,15 @@
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData } from 'react-router-dom';
 
-import { getMenu } from "../../services/apiRestaurant";
-import MenuItem from "../menu/MenuItem";
+import { getMenu } from '../../services/apiRestaurant';
+import MenuItem from '../menu/MenuItem';
 
 function Menu() {
   const menu = useLoaderData();
   console.log(menu);
 
   return (
-    <ul>
+    // tailwind class to create a divider between child elements
+    <ul className="divide-y divide-stone-200  px-2">
       {menu.map((pizza) => (
         <MenuItem pizza={pizza} key={pizza.id} />
       ))}
