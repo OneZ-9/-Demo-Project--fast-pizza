@@ -71,8 +71,22 @@ export default cartSlice.reducer;
 
 // However when we have a large application, we declare functions like this inside the stateSlice can be cost for performance, we can use 'reselect' library to handle those performance issues
 
+export const getCart = (store) => store.cart.cart;
+
 export const getTotalCartQuantity = (store) =>
   store.cart.cart.reduce((sum, item) => (sum += item.quantity), 0);
 
 export const getTotalCartPrice = (store) =>
   store.cart.cart.reduce((sum, item) => (sum += item.totalPrice), 0);
+
+// Nullish coalescing operator - logical operator that returns its right-hand side operand when its left-hand side operand is null or undefined, and otherwise returns its left-hand side operand.
+// below is a function that returns another function
+export const getCurrentQuantityById = (id) => (store) =>
+  store.cart.cart.find((item) => item.pizzaId === id)?.quantity ?? 0;
+
+// export function getCurrentQuantityById(id) {
+//   const getQty = (store) =>
+//     store.cart.cart.find((item) => item.pizzaId === id)?.quantity ?? 0;
+
+//   return getQty;
+// }
