@@ -1,6 +1,6 @@
 // Test ID: IIDSAT
+import { useFetcher, useLoaderData } from 'react-router-dom';
 
-import { useLoaderData } from 'react-router-dom';
 import { getOrder } from '../../services/apiRestaurant';
 import {
   calcMinutesLeft,
@@ -8,6 +8,7 @@ import {
   formatDate,
 } from '../../utils/helpers';
 import OrderItem from './OrderItem';
+import { useEffect } from 'react';
 
 function Order() {
   const order = useLoaderData();
@@ -25,6 +26,19 @@ function Order() {
 
   // console.log(order);
   const deliveryIn = calcMinutesLeft(estimatedDelivery);
+
+  const fetcher = useFetcher();
+
+  // to use this fetcher after component MouseEvent, we use useEffect hook
+  useEffect(
+    function () {
+      if (!fetcher.data && fetcher.state === 'idle') fetcher.load('/menu');
+      // load the data and store it in fetcher object
+    },
+    [fetcher],
+  );
+
+  // console.log(fetcher.data);
 
   return (
     <div className="space-y-8 px-4 py-6">
@@ -56,7 +70,15 @@ function Order() {
 
       <ul className="divide-y divide-stone-200 border-b border-t">
         {cart.map((cartItem) => (
-          <OrderItem cartItem={cartItem} key={cartItem.pizzaId} />
+          <OrderItem
+            cartItem={cartItem}
+            key={cartItem.pizzaId}
+            isLoadingIngredients={fetcher.state === 'loading'}
+            ingredients={
+              fetcher?.data?.find((el) => el.id === cartItem.pizzaId)
+                ?.ingredients ?? []
+            }
+          />
         ))}
       </ul>
 
