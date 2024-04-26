@@ -3,8 +3,8 @@ import { Form, redirect, useActionData, useNavigation } from 'react-router-dom';
 
 import { createOrder } from '../../services/apiRestaurant';
 import Button from '../../ui/Button';
-import { useSelector } from 'react-redux';
-import { getUsername } from '../user/userSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchAddress } from '../user/userSlice';
 import { clearCart, getCart, getTotalCartPrice } from '../cart/cartSlice';
 import EmptyCart from '../cart/EmptyCart';
 import store from '../../store';
@@ -42,19 +42,30 @@ const isValidPhone = (str) =>
 
 function CreateOrder() {
   const [withPriority, setWithPriority] = useState(false);
+  const dispatch = useDispatch();
+  const formErrors = useActionData();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
-  const username = useSelector(getUsername);
-
-  const formErrors = useActionData();
+  const {
+    username,
+    status: addressStatus,
+    position,
+    address,
+    error: errorAddress,
+  } = useSelector((store) => store.user);
+  const isLoadingAddress = addressStatus === 'loading';
 
   // const cart = fakeCart;
   const cart = useSelector(getCart);
   // console.log(cart);
-
   const totalCartPrice = useSelector(getTotalCartPrice);
   const priorityPrice = withPriority ? totalCartPrice * 0.2 : 0;
   const totalPrice = totalCartPrice + priorityPrice;
+
+  function handleGetAddress(e) {
+    e.preventDefault();
+    dispatch(fetchAddress());
+  }
 
   if (!cart.length) return <EmptyCart />;
 
@@ -92,16 +103,35 @@ function CreateOrder() {
           </div>
         </div>
 
-        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="relative mb-5 flex flex-col gap-2 sm:flex-row sm:items-center">
           <label className="sm:basis-[7rem]">Address</label>
           <div className="grow">
             <input
               type="text"
               name="address"
+              disabled={isLoadingAddress}
+              defaultValue={address}
               required
               className="input w-full"
             />
+            {addressStatus === 'error' && (
+              <p className="mt-2 rounded-md bg-red-100 p-2 text-xs text-red-700">
+                {errorAddress}
+              </p>
+            )}
           </div>
+
+          {!position.latitude && !position.longitude && (
+            <span className="absolute right-[3.5px] top-[34.5px] z-50 sm:right-[3.5px] sm:top-[3.5px] md:right-[3.5px] md:top-[4.5px]">
+              <Button
+                type="small"
+                onClick={handleGetAddress}
+                disabled={isLoadingAddress}
+              >
+                Get position
+              </Button>
+            </span>
+          )}
         </div>
 
         <div className="mb-12 flex items-center gap-5">
@@ -122,8 +152,15 @@ function CreateOrder() {
           {/* to pass this data with form details, it should be a string. */}
           {/* we use this hack because we cannot get data from redux inside a action function */}
           <input type="hidden" name="cart" value={JSON.stringify(cart)} />
+          <input
+            type="hidden"
+            name="position"
+            value={
+              position ? `${position.latitude}, ${position.longitude} ` : ''
+            }
+          />
 
-          <Button disabled={isSubmitting} type="primary">
+          <Button disabled={isSubmitting || isLoadingAddress} type="primary">
             {isSubmitting
               ? 'Placing order...'
               : `Order now for ${formatCurrency(totalPrice)}`}
